@@ -1,0 +1,4 @@
+.DS_Store
+.env*
+/config/master.key
+/config/credentials/*.key

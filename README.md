@@ -13,6 +13,8 @@ A deliberate design decision is that an LLM cannot directly commit certain chang
 
 An admin or coach could use their LLM of choice to parse an email containing upcoming JV basketball games, create a proposed calendar import, and then review and commit those events inside FISH.
 
+The tool registry in `server.rb` lists the full production tool set; five representative tools are included here to show the range without duplicating the same patterns twelve times.
+
 ## Files to start with
 
 - `app/models/fish_mcp/server.rb` — MCP server and tool registration

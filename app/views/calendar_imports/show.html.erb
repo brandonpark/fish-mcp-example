@@ -1,0 +1,52 @@
+<%= render "shared/sidebar" do %>
+  <div class="p-6 form-page">
+    <%= render "shared/breadcrumbs", items: [
+      { label: @calendar_import.calendar.name, path: calendar_path(@calendar_import.calendar) },
+      { label: "Review import" }
+    ] %>
+
+    <%= render "shared/form_page_header", title: "Review calendar import",
+          subtitle: "#{@calendar_import.calendar.name} · #{@calendar_import.source_label.presence || "AI calendar import"}" do %>
+      <span class="badge"><%= @calendar_import.status.humanize %></span>
+    <% end %>
+
+    <% if @calendar_import.draft? %>
+      <div class="card mb-4"><div class="card__body">
+        <p class="mb-0">Nothing is added until you approve this page. Check every date and time against the original schedule.</p>
+      </div></div>
+
+      <%= form_with url: calendar_import_path(params[:token]), method: :patch, data: { controller: "unsaved-changes" } do %>
+        <% @calendar_import.items.each do |item| %>
+          <div class="card mb-3"><div class="card__body">
+            <label class="flex items-center gap-2 mb-3">
+              <%= hidden_field_tag "items[#{item.id}][included]", "0" %>
+              <%= check_box_tag "items[#{item.id}][included]", "1", item.included? %>
+              Include this event
+            </label>
+            <div class="form-group"><%= label_tag "items_#{item.id}_title", "Title" %><%= text_field_tag "items[#{item.id}][title]", item.title, id: "items_#{item.id}_title" %></div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="form-group"><%= label_tag nil, "Starts" %><%= datetime_local_field_tag "items[#{item.id}][start]", item.starts_at&.in_time_zone(item.time_zone)&.strftime("%Y-%m-%dT%H:%M") %></div>
+              <div class="form-group"><%= label_tag nil, "Ends" %><%= datetime_local_field_tag "items[#{item.id}][end]", item.ends_at&.in_time_zone(item.time_zone)&.strftime("%Y-%m-%dT%H:%M") %></div>
+            </div>
+            <%= hidden_field_tag "items[#{item.id}][time_zone]", item.time_zone %>
+            <label class="flex items-center gap-2 mb-3"><%= hidden_field_tag "items[#{item.id}][all_day]", "0" %><%= check_box_tag "items[#{item.id}][all_day]", "1", item.all_day? %> All day</label>
+            <div class="form-group"><%= label_tag nil, "Location" %><%= text_field_tag "items[#{item.id}][location]", item.location %></div>
+            <div class="form-group"><%= label_tag nil, "Description" %><%= text_area_tag "items[#{item.id}][description]", item.description, rows: 3 %></div>
+            <% item.errors_payload.each do |message| %><p class="text-sm text-danger mb-1"><%= message %></p><% end %>
+            <% item.warnings_payload.each do |message| %><p class="text-sm text-warning mb-1"><%= message %></p><% end %>
+          </div></div>
+        <% end %>
+        <%= submit_tag "Save", class: "btn btn--secondary", data: { unsaved_changes_target: "save" } %>
+      <% end %>
+
+      <div class="flex gap-3 mt-4">
+        <%= button_to "Approve and import", approve_calendar_import_path(params[:token]), method: :post, class: "btn btn--primary" %>
+        <%= button_to "Reject import", reject_calendar_import_path(params[:token]), method: :post, class: "btn btn--danger" %>
+      </div>
+    <% elsif @calendar_import.imported? %>
+      <div class="card"><div class="card__body"><p class="mb-0"><%= @calendar_import.imported_count %> event(s) were imported.</p></div></div>
+    <% else %>
+      <div class="card"><div class="card__body"><p class="mb-0">This import is <%= @calendar_import.status %> and cannot be approved.</p></div></div>
+    <% end %>
+  </div>
+<% end %>
